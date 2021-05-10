@@ -14,6 +14,7 @@ const Appointments = ({navigation}) => {
     const [currentSelectedAppointment, setCurrentSelectedAppointment] = useState({})
     const [assignedDoctor, setAssignedDoctor] = useState('')
 
+    //penjelasan ini fungsi sama deng di Hospital/Dashboard/index.js
     const fetchCurrentAppointments = () => {
         firebase.database()
             .ref('appointments')
@@ -41,7 +42,97 @@ const Appointments = ({navigation}) => {
             })
     }
 
+    //penjelasan ini fungsi sama deng di Hospital/Dashboard/index.js
+    const approveAppointment = () => {
+        firebase.database()
+            .ref(`appointments/${currentSelectedAppointment.uid}`)
+            .set({
+                ...currentSelectedAppointment,
+                doctorName: assignedDoctor,
+                status: 'ongoing',
+            })
+            .then(() => {
+                backendData.setUserDetail({
+                    ...backendData.getUserDetail(),
+                    roomCapacity: backendData.getUserDetail().roomCapacity - 1
+                })
+                
+                firebase.database()
+                    .ref(`pengguna/${backendData.getUserDetail().uid}`)
+                    .set(backendData.getUserDetail())
+                    .then(() => {
+                        
+
+                        showMessage({
+                            message: "Appointment approved",
+                            type: 'success',
+                            hideOnPress: true
+                        })
+
+                        fetchCurrentAppointments()
+                        setAssignedDoctor('')
+                        setIsModalVisible(false)
+                    })
+                
+            })
+            .catch(error => {
+                console.log(error)
+                showMessage({
+                    message: error,
+                    type: 'danger',
+                    hideOnPress: true
+                })
+            })
+    }
+
+    //penjelasan ini fungsi sama deng di Hospital/Dashboard/index.js
+    const appointmentApprovalButtonHandler = el => {
+        if(el.status == "awaiting") {
+            setCurrentSelectedAppointment(el)
+
+            setIsModalVisible(true)
+        } else if(el.status == "ongoing") {
+            firebase.database()
+                .ref(`appointments/${el.uid}`)
+                .set({
+                    ...el,
+                    status: 'completed',
+                })
+                .then(() => {
+                    backendData.setUserDetail({
+                        ...backendData.getUserDetail(),
+                        roomCapacity: backendData.getUserDetail().roomCapacity + 1
+                    })
+
+                    firebase.database()
+                        .ref(`pengguna/${backendData.getUserDetail().uid}`)
+                        .set(backendData.getUserDetail())
+                        .then(() => {
+                            
+
+                            showMessage({
+                                message: "Appointment completed",
+                                type: 'success',
+                                hideOnPress: true
+                            })
+                            
+                            fetchCurrentAppointments()
+                        })
+                    
+                })
+                .catch(error => {
+                    console.log(error)
+                    showMessage({
+                        message: error,
+                        type: 'danger',
+                        hideOnPress: true
+                    })
+                })
+        }
+    }
+
     useEffect(() => {
+        //bekeng supaya tiap kali ini screen muncul, fetchCurrentAppointment mo ta eksekusi
         const unsubscribe = navigation.addListener('focus', fetchCurrentAppointments)
 
         return unsubscribe
@@ -77,50 +168,7 @@ const Appointments = ({navigation}) => {
                                                         <Button     bgColor="#6200EE" 
                                                                     textColor="white" 
                                                                     text={el.status == "awaiting" ? "Approve" : "Done"}
-                                                                    onPress={() => {
-                                                                        if(el.status == "awaiting") {
-                                                                            setCurrentSelectedAppointment(el)
-
-                                                                            setIsModalVisible(true)
-                                                                        } else if(el.status == "ongoing") {
-                                                                            firebase.database()
-                                                                                .ref(`appointments/${el.uid}`)
-                                                                                .set({
-                                                                                    ...el,
-                                                                                    status: 'completed',
-                                                                                })
-                                                                                .then(() => {
-                                                                                    backendData.setUserDetail({
-                                                                                        ...backendData.getUserDetail(),
-                                                                                        roomCapacity: backendData.getUserDetail().roomCapacity + 1
-                                                                                    })
-
-                                                                                    firebase.database()
-                                                                                        .ref(`pengguna/${backendData.getUserDetail().uid}`)
-                                                                                        .set(backendData.getUserDetail())
-                                                                                        .then(() => {
-                                                                                            
-
-                                                                                            showMessage({
-                                                                                                message: "Appointment completed",
-                                                                                                type: 'success',
-                                                                                                hideOnPress: true
-                                                                                            })
-                                                                                            
-                                                                                            fetchCurrentAppointments()
-                                                                                        })
-                                                                                    
-                                                                                })
-                                                                                .catch(error => {
-                                                                                    console.log(error)
-                                                                                    showMessage({
-                                                                                        message: error,
-                                                                                        type: 'danger',
-                                                                                        hideOnPress: true
-                                                                                    })
-                                                                                })
-                                                                        }
-                                                                    }}
+                                                                    onPress={() => appointmentApprovalButtonHandler(el)}
                                                         />
                                                     </View>
                                                 </View>
@@ -134,7 +182,7 @@ const Appointments = ({navigation}) => {
                 </Card>
             </View>
 
-            <Modal isVisible={isModalVisible}>
+            <Modal isVisible={isModalVisible} onBackButtonPress={() => setIsModalVisible(false)}>
                 <View style={styles.flex1}>
                     <Card>
                         <View style={styles.innerModalCardContainer}>
@@ -153,50 +201,7 @@ const Appointments = ({navigation}) => {
                             <Button text="Approve"
                                     bgColor="#6200EE"
                                     textColor="white"
-                                    onPress={() => {
-                                        
-
-                                        firebase.database()
-                                            .ref(`appointments/${currentSelectedAppointment.uid}`)
-                                            .set({
-                                                ...currentSelectedAppointment,
-                                                doctorName: assignedDoctor,
-                                                status: 'ongoing',
-                                            })
-                                            .then(() => {
-                                                backendData.setUserDetail({
-                                                    ...backendData.getUserDetail(),
-                                                    roomCapacity: backendData.getUserDetail().roomCapacity - 1
-                                                })
-                                                
-                                                firebase.database()
-                                                    .ref(`pengguna/${backendData.getUserDetail().uid}`)
-                                                    .set(backendData.getUserDetail())
-                                                    .then(() => {
-                                                        
-
-                                                        showMessage({
-                                                            message: "Appointment approved",
-                                                            type: 'success',
-                                                            hideOnPress: true
-                                                        })
-
-                                                        fetchCurrentAppointments()
-                                                        setAssignedDoctor('')
-                                                        setIsModalVisible(false)
-                                                    })
-                                                
-                                            })
-                                            .catch(error => {
-                                                console.log(error)
-                                                showMessage({
-                                                    message: error,
-                                                    type: 'danger',
-                                                    hideOnPress: true
-                                                })
-                                            })
-
-                                    }}
+                                    onPress={approveAppointment}
                             />
                         </View>
                     </Card>
@@ -207,30 +212,95 @@ const Appointments = ({navigation}) => {
 }
 
 const styles = StyleSheet.create({
-    flex1: {flex: 1},
-    hospitalInfoCardContainer: {height: 190, padding: 15},
-    hospitalInfoHeader: {height: 50, backgroundColor: '#6200EE', justifyContent: 'center', paddingLeft: 15},
-    hospitalInfoHeaderText: {fontWeight: 'bold', fontSize: 18, color: 'white'},
-    profilePicContainer: {flexDirection: 'row', padding: 10},
+    flex1: {
+        flex: 1
+    },
+    hospitalInfoCardContainer: {
+        height: 190, 
+        padding: 15
+    },
+    hospitalInfoHeader: {
+        height: 50, 
+        backgroundColor: '#6200EE', 
+        justifyContent: 'center', 
+        paddingLeft: 15
+    },
+    hospitalInfoHeaderText: {
+        fontWeight: 'bold', 
+        fontSize: 18, 
+        color: 'white'
+    },
+    profilePicContainer: {
+        flexDirection: 'row', 
+        padding: 10
+    },
     profilePic: {
         width: 80, 
         height: 80,
         borderRadius: 999
     },
-    hospitalInfoDetailContainer: {flex: 1, justifyContent: 'center', paddingHorizontal: 15},
-    hospitalInfoDetailNameText: {fontWeight: 'bold'},
-    currentAppointmentsCardContainer: {flex: 1, margin: 15},
-    innerCurrentAppointmentsCardContainer: {flex: 1},
-    CAheader: {backgroundColor: '#F4511E', height: 50, justifyContent: 'center', paddingHorizontal: 25},
-    CAheaderText: {fontWeight: 'bold', fontSize: 18},
-    CAcontentContainer: {flex: 1, padding: 25},
-    CAscrollView: {flex: 1, backgroundColor: '#EBEBEB', borderRadius: 25, padding: 15},
-    appointmentCardContainer: {borderRadius: 25, overflow: 'hidden', marginBottom: 25},
-    innerAppointmentCardContainer: {flexDirection: 'row', padding: 20},
-    boldText: {fontWeight: 'bold'},
-    innerModalCardContainer: {padding: 20, flex: 1},
-    modalTitleText: {fontWeight: 'bold', alignSelf: 'center', marginBottom: 25},
-    complaintTextBox: {flex: 1, backgroundColor: '#EBEBEB', borderRadius: 25, padding: 10},
+    hospitalInfoDetailContainer: {
+        flex: 1, 
+        justifyContent: 'center', 
+        paddingHorizontal: 15
+    },
+    hospitalInfoDetailNameText: {
+        fontWeight: 'bold'
+    },
+    currentAppointmentsCardContainer: {
+        flex: 1, 
+        margin: 15
+    },
+    innerCurrentAppointmentsCardContainer: {
+        flex: 1
+    },
+    CAheader: {
+        backgroundColor: '#F4511E', 
+        height: 50, 
+        justifyContent: 'center', 
+        paddingHorizontal: 25
+    },
+    CAheaderText: {
+        fontWeight: 'bold', 
+        fontSize: 18
+    },
+    CAcontentContainer: {
+        flex: 1, 
+        padding: 25
+    },
+    CAscrollView: {
+        flex: 1, 
+        backgroundColor: '#EBEBEB', 
+        borderRadius: 25, 
+        padding: 15
+    },
+    appointmentCardContainer: {
+        borderRadius: 25, 
+        overflow: 'hidden', 
+        marginBottom: 25
+    },
+    innerAppointmentCardContainer: {
+        flexDirection: 'row', 
+        padding: 20
+    },
+    boldText: {
+        fontWeight: 'bold'
+    },
+    innerModalCardContainer: {
+        padding: 20, 
+        flex: 1
+    },
+    modalTitleText: {
+        fontWeight: 'bold', 
+        alignSelf: 'center', 
+        marginBottom: 25
+    },
+    complaintTextBox: {
+        flex: 1, 
+        backgroundColor: '#EBEBEB', 
+        borderRadius: 25, 
+        padding: 10
+    },
 
 })
 

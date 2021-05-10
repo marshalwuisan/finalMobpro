@@ -6,6 +6,7 @@ import {TextInput} from '../../../components/atoms';
 import firebase from '../../../config/firebase'
 import BackendDataContext from '../../../contexts/backendDataContext';
 import {showMessage, hideMessage} from 'react-native-flash-message'
+import GetLocation from 'react-native-get-location'
 
 const Settings = ({navigation}) => {
   const [name, setName] = useState('')
@@ -14,7 +15,9 @@ const Settings = ({navigation}) => {
   const backendData = useContext(BackendDataContext)
   
   const setNewNameHandler = () => {
-    firebase.database().ref(`pengguna/${backendData.getUserDetail().uid}`).set({
+    firebase.database().ref(`pengguna/${backendData.getUserDetail().uid}`)
+    //update data di backend firebase
+    .set({
       ...backendData.getUserDetail(),
       name: name,
     })
@@ -25,17 +28,17 @@ const Settings = ({navigation}) => {
         hideOnPress: true
       })
 
-      //update the local data
+      //update data di lokal
       backendData.setUserDetail({
         ...backendData.getUserDetail(),
         name: name
       })
     })
-    .catch(() => {
+    .catch(error => {
       console.log(error)
       showMessage({
           message: error,
-          type: 'success',
+          type: 'danger',
           hideOnPress: true
       })
     })
@@ -50,18 +53,20 @@ const Settings = ({navigation}) => {
           hideOnPress: true
         })
       })
-      .catch(() => {
+      .catch(error => {
         console.log(error)
         showMessage({
             message: error,
-            type: 'success',
+            type: 'danger',
             hideOnPress: true
         })
       })
   }
 
   const setNewRoomCapacityHandler = () => {
-    firebase.database().ref(`pengguna/${backendData.getUserDetail().uid}`).set({
+    firebase.database().ref(`pengguna/${backendData.getUserDetail().uid}`)
+    //update data di backend firebase
+    .set({
       ...backendData.getUserDetail(),
       roomCapacity: parseInt(roomCapacity)
     })
@@ -72,22 +77,61 @@ const Settings = ({navigation}) => {
         hideOnPress: true
       })
 
-      //update the local data
+      //update data di lokal
       backendData.setUserDetail({
         ...backendData.getUserDetail(),
         roomCapacity: parseInt(roomCapacity)
       })
     })
-    .catch(() => {
+    .catch(error => {
       console.log(error)
       showMessage({
           message: error,
-          type: 'success',
+          type: 'danger',
           hideOnPress: true
       })
     })
   }
 
+  const setNewLocationHandler = () => {
+    GetLocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+    })
+    .then(location => {
+      //kalo so dapa dpe lokasi
+
+      firebase.database().ref(`pengguna/${backendData.getUserDetail().uid}`)
+      //update data di backend firebase
+      .set({
+        ...backendData.getUserDetail(),
+        latitude: location.latitude,
+        longitude: location.longitude,
+      })
+      .then(() => {
+        showMessage({
+          message: "Hospital location successfully changed",
+          type: 'success',
+          hideOnPress: true
+        })
+
+        //update data di lokal
+        backendData.setUserDetail({
+          ...backendData.getUserDetail(),
+          latitude: location.latitude,
+          longitude: location.longitude,
+        })
+      })
+      .catch(error => {
+        console.log(error)
+        showMessage({
+          message: error,
+          type: 'danger',
+          hideOnPress: true
+        })
+      })
+    })
+  }
 
   return (
     <View>
@@ -151,7 +195,7 @@ const Settings = ({navigation}) => {
         </View>
 
 
-        <View style={[styles.innerContainer, {marginBottom: 150}]}>
+        <View style={styles.innerContainer}>
           <Card>
             <View>
               <View
@@ -173,7 +217,29 @@ const Settings = ({navigation}) => {
                   />
                 </View>
                 <View style={styles.changeButton}>
-                  <Button bgColor="#F4511E" text="Change" textColor="black" onPress={setNewRoomCapacityHandler}/>
+                  <Button bgColor="#6200EE" text="Change" textColor="white" onPress={setNewRoomCapacityHandler}/>
+                </View>
+              </View>
+            </View>
+          </Card>
+        </View>
+
+        <View style={[styles.innerContainer, {marginBottom: 150}]}>
+          <Card>
+            <View>
+              <View
+                style={styles.purpleCardHeaderContainer}>
+                <Text
+                  style={[styles.boldText, {color: 'white'}]}>
+                  Hospital Location
+                </Text>
+              </View>
+              <View style={styles.cardContentContainer}>
+                <Text style={styles.boldText}>
+                  Set hospital location from current location
+                </Text>
+                <View style={styles.changeButton}>
+                  <Button bgColor="#F4511E" text="Set Location" textColor="black" onPress={setNewLocationHandler}/>
                 </View>
               </View>
             </View>
@@ -187,8 +253,14 @@ const Settings = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {width: '100%'},
-  innerContainer: {height: 250, paddingHorizontal: 25, paddingTop: 30},
+  container: {
+    width: '100%'
+  },
+  innerContainer: {
+    height: 250, 
+    paddingHorizontal: 25, 
+    paddingTop: 30
+  },
   orangeCardHeaderContainer: {
     backgroundColor: '#F4511E',
     height: 50,
@@ -201,10 +273,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 15,
   },
-  boldText: {fontSize: 18, fontWeight: 'bold'},
-  cardContentContainer: {padding: 15},
-  textInputContainer: {marginTop: 20},
-  changeButton: {marginTop: 20, paddingHorizontal: 80},
+  boldText: {
+    fontSize: 18, 
+    fontWeight: 'bold'
+  },
+  cardContentContainer: {
+    padding: 15
+  },
+  textInputContainer: {
+    marginTop: 20
+  },
+  changeButton: {
+    marginTop: 20, 
+    paddingHorizontal: 80
+  },
 })
 
 export default Settings;

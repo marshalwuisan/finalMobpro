@@ -15,6 +15,7 @@ const Settings = ({navigation}) => {
     const [password, setPassword] = useState('')
 
     const setNewNameHandler = () => {
+        //update data di backend firebase
         firebase.database().ref(`pengguna/${backendData.getUserDetail().uid}`).set({
             ...backendData.getUserDetail(),
             name: name,
@@ -26,7 +27,7 @@ const Settings = ({navigation}) => {
             hideOnPress: true
             })
 
-            //update the local data
+            //update data di backend lokal
             backendData.setUserDetail({
             ...backendData.getUserDetail(),
             name: name
@@ -67,6 +68,7 @@ const Settings = ({navigation}) => {
                 return
             }
 
+            //update data di backend firebase
             firebase.database().ref(`pengguna/${backendData.getUserDetail().uid}`).set({
                 ...backendData.getUserDetail(),
                 profilePic: base64,
@@ -78,7 +80,7 @@ const Settings = ({navigation}) => {
                 hideOnPress: true
                 })
     
-                //update the local data
+                //update data di backend lokal
                 backendData.setUserDetail({
                 ...backendData.getUserDetail(),
                 profilePic: base64
@@ -183,21 +185,56 @@ const Settings = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-    cardContainer: {paddingHorizontal: 15, paddingTop: 25},
-    innerPPcardContainer: {flex: 1},
-    purpleCardHeader: {backgroundColor: '#6200EE', height: 50, justifyContent: 'center', paddingLeft: 15},
-    orangeCardHeader: {backgroundColor: '#F4511E', height: 50, justifyContent: 'center', paddingLeft: 15},
-    boldText: {fontSize: 18, fontWeight: 'bold'},
-    profilePicContainer: {flexDirection: 'row', flex: 1, alignItems: 'center', paddingHorizontal: 15},
+    cardContainer: {
+      paddingHorizontal: 15, 
+      paddingTop: 25
+    },
+    innerPPcardContainer: {
+      flex: 1
+    },
+    purpleCardHeader: {
+      backgroundColor: '#6200EE', 
+      height: 50, 
+      justifyContent: 'center', 
+      paddingLeft: 15
+    },
+    orangeCardHeader: {
+      backgroundColor: '#F4511E', 
+      height: 50, 
+      justifyContent: 'center', 
+      paddingLeft: 15
+    },
+    boldText: {
+      fontSize: 18, 
+      fontWeight: 'bold'
+    },
+    profilePicContainer: {
+      flexDirection: 'row', 
+      flex: 1, 
+      alignItems: 'center', 
+      paddingHorizontal: 15
+    },
     profilePic: {
         width: 70,
         height: 70,
         borderRadius: 999,
     },
-    profilePicChangeButton: {flex: 1, paddingHorizontal: 15},
-    innerCardContainer: {padding: 15},
-    textInputContainer: {marginTop: 20},
-    changeButtonContainer: {paddingLeft: 15},
-    changeButton: {marginTop: 20, paddingHorizontal: 80},
+    profilePicChangeButton: {
+      flex: 1, 
+      paddingHorizontal: 15
+    },
+    innerCardContainer: {
+      padding: 15
+    },
+    textInputContainer: {
+      marginTop: 20
+    },
+    changeButtonContainer: {
+      paddingLeft: 15
+    },
+    changeButton: {
+      marginTop: 20, 
+      paddingHorizontal: 80
+    },
 })
 export default Settings
